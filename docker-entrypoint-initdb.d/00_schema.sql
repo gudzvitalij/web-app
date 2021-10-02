@@ -13,7 +13,7 @@ CREATE TABLE roles
     "userId" BIGINT      NOT NULL REFERENCES users,
     created  timestamptz NOT NULL DEFAULT current_timestamp
 );
-CREATE TABLE reset_code
+CREATE TABLE reset_codes
 (
     id    BIGSERIAL PRIMARY KEY,
     code  TEXT  NOT NULL,
