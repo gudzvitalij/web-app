@@ -13,9 +13,9 @@ public class CardRepository {
   private final JdbcTemplate jdbcTemplate;
   private final RowMapper<Long> cardIdRowMapper = resultSet -> resultSet.getLong("ownerId");
   private final RowMapper<Card> cardRowMapper = resultSet -> new Card(
-      resultSet.getLong("id"),
-      resultSet.getString("number"),
-      resultSet.getLong("balance")
+          resultSet.getLong("id"),
+          resultSet.getString("number"),
+          resultSet.getLong("balance")
   );
   private final RowMapper<Card> cardRowMapperOwner = resultSet -> new Card(
           resultSet.getLong("id"),
@@ -81,19 +81,26 @@ public class CardRepository {
     );
   }
 
-  public void transaction(long cardId, int recipientCardId, int amount) {
+  public void transaction(long senderCardId, long recipientCardId, long amount) {
     // language=PostgreSQL
-    jdbcTemplate.update(
-            "UPDATE cards SET balance = balance - ? WHERE id = ? AND active = TRUE",
-            amount,
-            cardId
+    var senderCard = jdbcTemplate.queryOne(
+            """
+              UPDATE cards SET balance = balance - ? WHERE id = ? AND active = TRUE RETURNING id, number, balance;
+                """
+            ,
+            cardRowMapper,
+            amount, senderCardId
     );
     // language=PostgreSQL
-    jdbcTemplate.update(
-            "UPDATE cards SET balance = balance + ? WHERE id = ? AND active = TRUE",
-            amount,
-            recipientCardId
+    jdbcTemplate.queryOne(
+            """
+              UPDATE cards SET balance = balance + ? WHERE id = ? AND active = TRUE;
+                """
+            ,
+            cardRowMapper,
+            amount, recipientCardId
     );
+    return senderCard;
   }
 
   public Optional<Long> getOwnerId(long cardId) {

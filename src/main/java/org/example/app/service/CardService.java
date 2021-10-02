@@ -35,12 +35,12 @@ public class CardService {
     return cardRepository.order(id,ownerId,number,balance,active);
   }
 
-  public TransferResponseDto transfer(long cardId, User user, TransferRequestDto requestDto) throws CardNotFoundException {
-    final var card = cardRepository.getCardById(cardId).get();
+  public TransferResponseDto transfer(long senderCardId, User user, TransferRequestDto requestDto) throws CardNotFoundException {
+    final var card = cardRepository.getCardById(senderCardId).get();
     final var recipientCardId = requestDto.getRecipientCardId();
     final var amount = requestDto.getAmount();
 
-    if (user.getId() != cardRepository.getOwnerId(cardId).orElseThrow(RuntimeException::new)) {
+    if (user.getId() != cardRepository.getOwnerId(senderCardId).orElseThrow(RuntimeException::new)) {
       throw new RuntimeException();
     }
 
@@ -52,7 +52,7 @@ public class CardService {
       throw new CardNotFoundException();
     }
 
-    cardRepository.transaction(cardId, recipientCardId, amount);
+    cardRepository.transaction(senderCardId, recipientCardId, amount);
     final var result = cardRepository.getCardById(recipientCardId).orElseThrow(RuntimeException::new);
 
     return new TransferResponseDto(result.getId(), result.getNumber(), result.getBalance());
