@@ -28,5 +28,11 @@ public class UserHelper {
             .orElseThrow(RuntimeException::new);
   }
 
+  public static Collection<String> getRole(HttpServletRequest req) {
+    Authentication auth = (Authentication) req.getAttribute(RequestAttributes.AUTH_ATTR);
+    return (Collection<String>) auth.getCredentials();
+  }
+
+
 
 }
