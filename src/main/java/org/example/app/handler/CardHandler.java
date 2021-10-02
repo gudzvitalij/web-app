@@ -10,6 +10,7 @@ import org.example.app.domain.User;
 import org.example.app.dto.TransferRequestDto;
 import org.example.app.exception.CardNotFoundException;
 import org.example.app.service.CardService;
+import org.example.app.util.CardHelper;
 import org.example.app.util.UserHelper;
 import org.example.framework.attribute.RequestAttributes;
 import org.example.framework.security.Authentication;
@@ -48,34 +49,27 @@ public class CardHandler { // Servlet -> Controller -> Service (domain) -> domai
   }
 
   public void getById(HttpServletRequest req, HttpServletResponse resp) {
-    final var cardId = Long.parseLong(((Matcher) req.getAttribute(RequestAttributes.PATH_MATCHER_ATTR)).group("cardId"));
+    final var cardId = CardHelper.getCardId(req);
     log.log(Level.INFO, "getById");
   }
 
 
 
   public void order(HttpServletRequest req, HttpServletResponse resp) {
-    final var cardId = Long.parseLong(((Matcher) req
-            .getAttribute(RequestAttributes.PATH_MATCHER_ATTR))
-            .group("cardId"));
-    final var roles = UserHelper.getUserRoles(req);
-    if (roles.contains(Roles.ROLE_ADMIN) || userIsOwner(req)){
-      log.log(Level.INFO, "ordered");
-    }
+    final var user = UserHelper.getUser(req);
+    log.log(Level.INFO, "ordered");
   }
 
 
   public void blockById(HttpServletRequest req, HttpServletResponse resp) {
     try {
-      final var cardId = Long.parseLong(((Matcher) req
-              .getAttribute(RequestAttributes.PATH_MATCHER_ATTR))
-              .group("cardId"));
-      final var roles = UserHelper.getUserRoles(req);
-      if (roles.contains(Roles.ROLE_ADMIN) || userIsOwner(req)) {
-        final var data = service.blockCardById(cardId);
+      final var cardId = CardHelper.getCardId(req);
+      final var user = UserHelper.getUser(req);
+
+        final var data = service.blockCardById(cardId,user);
         resp.setHeader("Content-Type", "application/json");
         resp.getWriter().write(gson.toJson(data));
-      }
+
     }
     catch (IOException e) {
       throw new RuntimeException(e);
@@ -83,21 +77,10 @@ public class CardHandler { // Servlet -> Controller -> Service (domain) -> domai
 
   }
 
-  public boolean userIsOwner(HttpServletRequest req){
-    final var cardId = Long.parseLong(((Matcher) req
-            .getAttribute(RequestAttributes.PATH_MATCHER_ATTR))
-            .group("cardId"));
-    final var user = UserHelper.getUser(req);
-    final var ownerId = service.getCardById(cardId)
-            .map(Card::getOwnerId)
-            .orElseThrow(RuntimeException::new);
-    return (user.getId() == ownerId);
-  }
 
   public void transaction(HttpServletRequest req, HttpServletResponse resp) {
     try {
-      final var cardId = Long.parseLong(((Matcher) req.getAttribute(RequestAttributes.PATH_MATCHER_ATTR))
-              .group("cardId"));
+      final var cardId = CardHelper.getCardId(req);
       final var user = UserHelper.getUser(req);
       final var requestDto = gson.fromJson(req.getReader(), TransferRequestDto.class);
       final var responseDto = service.transfer(cardId, user, requestDto);

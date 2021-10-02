@@ -81,7 +81,7 @@ public class CardRepository {
     );
   }
 
-  public void transaction(long senderCardId, long recipientCardId, long amount) {
+  public Optional<Card> transaction(long senderCardId, long recipientCardId, long amount) {
     // language=PostgreSQL
     var senderCard = jdbcTemplate.queryOne(
             """

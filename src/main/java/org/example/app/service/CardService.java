@@ -7,6 +7,8 @@ import org.example.app.dto.TransferRequestDto;
 import org.example.app.dto.TransferResponseDto;
 import org.example.app.exception.CardNotFoundException;
 import org.example.app.repository.CardRepository;
+import org.example.app.repository.UserRepository;
+import org.example.framework.security.Roles;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +16,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CardService {
   private final CardRepository cardRepository;
+  private final UserRepository userRepository;
+
+
 
   public List<Card> getAllByOwnerId(long ownerId) {
     return cardRepository.getAllByOwnerId(ownerId);
@@ -27,8 +32,12 @@ public class CardService {
     return cardRepository.getCardById(cardId);
   }
 
-  public int blockCardById(long cardId){
-    return cardRepository.blockCardById(cardId);
+  public int blockCardById(long cardId, User user){
+    if (checkAdminRole(user) || userIsOwner(cardId,user)){
+      return cardRepository.blockCardById(cardId);
+    } else {
+      throw new RuntimeException();
+    }
   }
 
   public Optional<Card> order(long id, long ownerId, String number, long balance, boolean active) {
@@ -52,9 +61,22 @@ public class CardService {
       throw new CardNotFoundException();
     }
 
-    cardRepository.transaction(senderCardId, recipientCardId, amount);
-    final var result = cardRepository.getCardById(recipientCardId).orElseThrow(RuntimeException::new);
+
+    final var result = cardRepository.transaction(senderCardId, recipientCardId, amount).orElseThrow(RuntimeException::new);
+
 
     return new TransferResponseDto(result.getId(), result.getNumber(), result.getBalance());
+  }
+
+  public boolean userIsOwner(long cardId, User user){
+    final var ownerId = cardRepository.getCardById(cardId)
+            .map(Card::getOwnerId)
+            .orElseThrow(RuntimeException::new);
+    return (user.getId() == ownerId);
+  }
+
+  public boolean checkAdminRole(User user){
+    final var roleList = userRepository.getRoleByUserId(user.getId());
+    return roleList.contains(Roles.ROLE_ADMIN);
   }
 }

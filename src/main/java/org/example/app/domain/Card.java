@@ -13,5 +13,10 @@ public class Card {
   private long balance;
   private long ownerId;
 
+  public Card(long id, String number, long balance) {
+    this.id = id;
+    this.number = number;
+    this.balance = balance;
+  }
 
 }
