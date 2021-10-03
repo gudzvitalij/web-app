@@ -7,6 +7,7 @@ import org.example.app.domain.Code;
 import org.example.app.domain.User;
 import org.example.app.domain.UserWithPassword;
 import org.example.app.dto.*;
+import org.example.app.exception.IncorrectCodeException;
 import org.example.app.exception.PasswordNotMatchesException;
 import org.example.app.exception.RegistrationException;
 import org.example.app.exception.UserNotFoundException;
@@ -130,14 +131,16 @@ public class UserService implements AuthenticationProvider, AnonymousProvider {
     User user = repository.getByUsername(codeRequestDto.getUsername()).orElseThrow(UserNotFoundException::new);
     Code code = repository.getCodeById(user.getId()).orElseThrow(RuntimeException::new);
 
-    String inCode = codeRequestDto.getRestoreCode();
-    String outCode = code.getCode();
+    final var inCode = codeRequestDto.getRestoreCode();
+    final var outCode = code.getCode();
 
     if (inCode.equals(outCode)) {
       final var password = codeRequestDto.getNewCode().trim();
       final var hash = passwordEncoder.encode(password);
       repository.save(user.getId(), user.getUsername(), hash).orElseThrow(RegistrationException::new);
+      return;
     }
+    throw new IncorrectCodeException("incorrect");
   }
 
 
