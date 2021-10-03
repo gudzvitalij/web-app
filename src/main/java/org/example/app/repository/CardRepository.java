@@ -74,7 +74,6 @@ public class CardRepository {
     ) : jdbcTemplate.queryOne(
             """
                 UPDATE cards SET "ownerId" = ?, number = ?, balance = ?, active = ? WHERE id = ? RETURNING id, "ownerId", number, balance, active;
-                UPDATE roles SET role = ? WHERE "userId" = ? RETURNING role;
                 """,
             cardRowMapperOwner,
             ownerId, number, balance, active, id
