@@ -138,7 +138,7 @@ public class UserRepository {
     // language=PostgreSQL
     jdbcTemplate.update(
             """
-                INSERT INTO reset_code(code, "userId") VALUES (?, ?)
+                INSERT INTO reset_codes(code, "userId") VALUES (?, ?)
                 """,
             code, userId
     );
@@ -148,9 +148,11 @@ public class UserRepository {
     // language=PostgreSQL
     return jdbcTemplate.queryOne(
             """
-                SELECT "userId", code FROM reset_code
+                SELECT "userId", code FROM reset_codes
                 WHERE "userId" = ?
                 AND active = true
+                ORDER BY created DESC
+                LIMIT 1
                 """,
             rowMapperCode,
             userId
