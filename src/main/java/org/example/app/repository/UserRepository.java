@@ -27,10 +27,7 @@ public class UserRepository {
       resultSet.getString("password")
   );
 
-  private final RowMapper<User> rowMapperRole = resultSet -> new User(
-          resultSet.getLong("userId"),
-          resultSet.getString("role")
-  );
+  private final RowMapper<String> rowMapperRole = resultSet -> resultSet.getString("role");
 
   private final RowMapper<Code> rowMapperCode = resultSet -> new Code(
           resultSet.getString("code"),
@@ -126,7 +123,7 @@ public class UserRepository {
     );
   }
 
-  public List<User> getRoleByUserId(long userId) {
+  public List<String> getRoleByUserId(long userId) {
     // language=PostgreSQL
     return jdbcTemplate.queryAll(
             """
